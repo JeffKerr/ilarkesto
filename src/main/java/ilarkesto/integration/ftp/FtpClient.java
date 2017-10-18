@@ -185,8 +185,8 @@ public class FtpClient {
 		}
 
 		try {
-			if (deleteRemotey) deleteFile(path);
 			IO.move(tmpFile, destination, true);
+			if (deleteRemotey) deleteFile(path);
 		} finally {
 			IO.deleteQuiet(tmpFile);
 		}
@@ -294,6 +294,7 @@ public class FtpClient {
 	}
 
 	public void createDir(String path) {
+		if (path == null) return;
 		if (existsDir(path)) return;
 		log.info("Create dir:", path);
 		boolean created;

@@ -138,42 +138,58 @@ public class Zeiterfassung {
 		for (DayAtWork day : days) {
 			for (WorkActivity activity : day.getActivities()) {
 				if (!activity.isBookingRequired()) continue;
-				activity.setAchievoPackageId("10282");
-				activity.setAchievoProjectId("5461");
 
-				if (activity.getAchievoId() != null) continue;
-				String hiszillaId = activity.getHiszillaId();
-				if (hiszillaId != null) {
-					activity.setAchievoId(determineAchievoIdByHiszillaId(hiszillaId, activity.getText()));
-				} else {
-					String id = determineAchievoIdByText(activity.getText());
-					activity.setAchievoId(id);
+				if (activity.getAchievoPhaseId() == null) {
+					String hiszillaId = activity.getHiszillaId();
+					if (hiszillaId != null) {
+						activity.setAchievoPhaseId(determineAchievoPhaseIdByHiszillaId(hiszillaId, activity.getText()));
+					} else {
+						String id = determineAchievoPhaseIdByText(activity.getText());
+						activity.setAchievoPhaseId(id);
+					}
 				}
+
+				activity.setAchievoPackageId(determineAchievoPackageId(activity, day.getDate()));
+				activity.setAchievoProjectId(determineAchievoProjectId(activity));
 			}
 		}
 	}
 
-	private static String determineAchievoIdByText(String text) {
-		// if ("Sprint Review".equals(text)) return "27683";
-		// if ("Integrationstest".equals(text)) return "27684";
-		// if ("Product Backlog Refinement".equals(text)) return "27817";
-		// for (DayAtWork day : days) {
-		// for (WorkActivity activity : day.getActivities()) {
-		// if (activity.getAchievoId() == null) continue;
-		// if (Str.isBlank(activity.getText())) continue;
-		// if (text.equals(activity.getText())) return activity.getAchievoId();
-		// }
-		// }
+	private static String determineAchievoProjectId(WorkActivity activity) {
+		String text = activity.getText();
+
+		if ("Sprint Retrospective".equals(text)) return "8444";
+		if ("29170".equals(activity.getAchievoPhaseId())) return "8444";
+
+		return "5461";
+	}
+
+	private static String determineAchievoPackageId(WorkActivity activity, Date date) {
+		String text = activity.getText();
+
+		if ("Sprint Retrospective".equals(text)) return "10577";
+		if ("29170".equals(activity.getAchievoPhaseId())) return "10577";
+
+		if (date.isBefore(new Date(2017, 7, 24))) return "10282";
+		return "11025";
+	}
+
+	private static String determineAchievoPhaseIdByText(String text) {
+
+		if ("Sprint Retrospecitve".equals(text)) return "29170";
+		if ("Daily Scrum".equals(text)) return "32052";
+		if ("Product Backlog Refinement".equals(text)) return "32056";
+
 		if (!hiszillaLineReached) System.out.println("Achievo-ID fehlt. Text: " + text);
 		return null;
 	}
 
-	private static String determineAchievoIdByHiszillaId(String hiszillaId, String text) {
+	private static String determineAchievoPhaseIdByHiszillaId(String hiszillaId, String text) {
 		if (hiszillaId == null) return null;
 		for (DayAtWork day : days) {
 			for (WorkActivity activity : day.getActivities()) {
-				if (activity.getAchievoId() == null) continue;
-				if (hiszillaId.equals(activity.getHiszillaId())) return activity.getAchievoId();
+				if (activity.getAchievoPhaseId() == null) continue;
+				if (hiszillaId.equals(activity.getHiszillaId())) return activity.getAchievoPhaseId();
 			}
 		}
 		if (!hiszillaLineReached) System.out.println("Achievo-ID fehlt. Hiszilla: " + hiszillaId + " Text: " + text);

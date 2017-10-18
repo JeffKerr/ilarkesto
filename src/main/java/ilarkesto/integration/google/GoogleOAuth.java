@@ -74,6 +74,7 @@ public class GoogleOAuth extends OAuth2 {
 
 	public ContactsService createContactsService() {
 		ContactsService service = new ContactsService("<var>Ilarkesto</var>");
+		service.getRequestFactory().setHeader("User-Agent", "Ilarkesto");
 		service.useSsl();
 		service.setHeader("GData-Version", "3.0");
 		service.setPrivateHeader("Authorization", "Bearer " + getAccessToken(true));

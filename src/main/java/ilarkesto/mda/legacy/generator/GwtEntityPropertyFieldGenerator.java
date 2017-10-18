@@ -249,6 +249,7 @@ public class GwtEntityPropertyFieldGenerator extends AClassGenerator {
 		ln();
 		annotationOverride();
 		ln("    protected Collection<" + referencedType + "> getSelectedEntities() {");
+		ln("        if (entity == null) return Collections.emptyList();");
 		ln("        return " + Utl.class.getName() + ".sort(entity.get" + Str.uppercaseFirstLetter(property.getName())
 				+ "());");
 		ln("    }");

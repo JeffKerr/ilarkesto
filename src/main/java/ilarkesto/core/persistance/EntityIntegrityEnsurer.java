@@ -43,7 +43,8 @@ public class EntityIntegrityEnsurer {
 			Collection<Entity> entitiesOfType = entry.getValue();
 			log.info("   ", type.getSimpleName(), entitiesOfType.size());
 			ensureIntegrity(entitiesOfType);
-			if (rt2.getRuntime() > 1000) log.info("      ->", rt2.getRuntimeFormated());
+			if (rt2.getRuntime() > 1000)
+				log.info("      ->", rt2.getRuntimeFormated(), "|", rt2.getRuntime() / count, "ms/entity");
 		}
 
 		log.info("Integrity for all", count, "entities ensured in", rt.getRuntimeFormated());

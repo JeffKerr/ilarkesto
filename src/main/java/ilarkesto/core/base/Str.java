@@ -590,6 +590,12 @@ public class Str {
 		return s.substring(prefixToRemove.length());
 	}
 
+	public static String getSuffix(String s, String expectedPrefix) {
+		if (s == null) return null;
+		if (!s.startsWith(expectedPrefix)) return null;
+		return s.substring(expectedPrefix.length());
+	}
+
 	public static String getFirstParagraph(String s) {
 		return getFirstParagraph(s, "\n\n");
 	}

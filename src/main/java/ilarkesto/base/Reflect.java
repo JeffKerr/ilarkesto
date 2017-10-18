@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +65,9 @@ public abstract class Reflect {
 			method.setAccessible(true);
 			return method.invoke(o);
 		} catch (Exception ex) {
-			throw new RuntimeException("Failed to invoke getter method: " + o.getClass().getSimpleName() + "."
-					+ method.getName() + "()", ex);
+			throw new RuntimeException(
+					"Failed to invoke getter method: " + o.getClass().getSimpleName() + "." + method.getName() + "()",
+					ex);
 		}
 	}
 
@@ -169,9 +171,8 @@ public abstract class Reflect {
 
 	public static void setPropertyByStringValue(Object o, String name, String valueAsString) {
 		Method setterMethod = getSetterMethod(o.getClass(), name);
-		if (setterMethod == null)
-			throw new RuntimeException("Setter " + o.getClass().getSimpleName() + ".set"
-					+ Str.uppercaseFirstLetter(name) + "(?) does not exist.");
+		if (setterMethod == null) throw new RuntimeException("Setter " + o.getClass().getSimpleName() + ".set"
+				+ Str.uppercaseFirstLetter(name) + "(?) does not exist.");
 		Class type = setterMethod.getParameterTypes()[0];
 		Object value = toType(valueAsString, type);
 		invoke(o, setterMethod, value);
@@ -235,9 +236,8 @@ public abstract class Reflect {
 
 	public static Object invoke(Object object, String method, Object... parameters) {
 		Method m = getDeclaredMethodUsingAutoboxing(object.getClass(), method, getClasses(parameters));
-		if (m == null)
-			throw new RuntimeException("Method does not exist: " + object.getClass() + "." + method + "("
-					+ Str.concat(getClassSimpleNames(parameters), ", ") + ")");
+		if (m == null) throw new RuntimeException("Method does not exist: " + object.getClass() + "." + method + "("
+				+ Str.concat(getClassSimpleNames(parameters), ", ") + ")");
 		return invoke(object, m, parameters);
 	}
 
@@ -284,8 +284,7 @@ public abstract class Reflect {
 			if (!name.equals(m.getName())) continue;
 			if (isTypesCompatible(m.getParameterTypes(), parameterTypes, true)) return m;
 		}
-		if (clazz != Object.class)
-			return getDeclaredMethodUsingAutoboxing(clazz.getSuperclass(), name, parameterTypes);
+		if (clazz != Object.class) return getDeclaredMethodUsingAutoboxing(clazz.getSuperclass(), name, parameterTypes);
 		return null;
 	}
 
@@ -358,6 +357,19 @@ public abstract class Reflect {
 		}
 		Class<?> superclass = clazz.getSuperclass();
 		if (superclass != null && superclass != Object.class) ret.addAll(getSetters(superclass));
+		return ret;
+	}
+
+	public static List<Method> getGetters(Class<?> clazz) {
+		List<Method> ret = new LinkedList<Method>();
+		for (Method method : clazz.getDeclaredMethods()) {
+			String name = method.getName();
+			if (name.length() < 4 || !name.startsWith("get")) continue;
+			if (method.getParameterTypes().length != 0) continue;
+			ret.add(method);
+		}
+		Class<?> superclass = clazz.getSuperclass();
+		if (superclass != null && superclass != Object.class) ret.addAll(getGetters(superclass));
 		return ret;
 	}
 
@@ -442,6 +454,18 @@ public abstract class Reflect {
 			}
 		}
 		return null;
+	}
+
+	public static Map<String, Object> readAllGetters(Object o, boolean ignoreExceptions) {
+		HashMap<String, Object> ret = new HashMap<String, Object>();
+		for (Method getter : getGetters(o.getClass())) {
+			try {
+				ret.put(Str.lowercaseFirstLetter(getter.getName().substring(3)), invoke(o, getter));
+			} catch (RuntimeException ex) {
+				if (!ignoreExceptions) throw ex;
+			}
+		}
+		return ret;
 	}
 
 }

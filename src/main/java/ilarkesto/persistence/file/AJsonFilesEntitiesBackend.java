@@ -26,6 +26,7 @@ import ilarkesto.io.AFileStorage;
 import ilarkesto.io.IO;
 import ilarkesto.json.JsonMapper;
 import ilarkesto.json.JsonMapper.TypeResolver;
+import ilarkesto.json.JsonObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import java.util.Map;
 public abstract class AJsonFilesEntitiesBackend extends ACachingEntitiesBackend {
 
 	protected AFileStorage storage;
+	protected AFileStorage logStorage;
 
 	protected abstract AEntityJsonFileUpgrades createUpgrader();
 
@@ -47,8 +49,9 @@ public abstract class AJsonFilesEntitiesBackend extends ACachingEntitiesBackend 
 	private DateAndTime loadTime;
 	private DateAndTime lastSaveTime;
 
-	public AJsonFilesEntitiesBackend(AFileStorage storage) {
+	public AJsonFilesEntitiesBackend(AFileStorage storage, AFileStorage logStorage) {
 		this.storage = storage;
+		this.logStorage = logStorage;
 		load();
 	}
 
@@ -114,7 +117,7 @@ public abstract class AJsonFilesEntitiesBackend extends ACachingEntitiesBackend 
 
 	@Override
 	protected void onUpdate(Collection<AEntity> modified, Collection<String> deleted,
-			Map<String, Map<String, String>> modifiedPropertiesByEntityIds, Runnable callback) {
+			Map<String, Map<String, String>> modifiedPropertiesByEntityIds, Runnable callback, String transactionText) {
 		if ((modified == null || modified.isEmpty()) && (deleted == null || deleted.isEmpty())) return;
 		List<File> files = new ArrayList<File>();
 		RuntimeTracker rt = new RuntimeTracker();
@@ -153,12 +156,27 @@ public abstract class AJsonFilesEntitiesBackend extends ACachingEntitiesBackend 
 				deleteCount++;
 			}
 		}
+
+		writeLog(modifiedPropertiesByEntityIds, deleted, transactionText);
+
 		log.info("Entity changes saved:", rt.getRuntimeFormated(), "(" + saveCount, "saved,", deleteCount, "deleted)");
 
 		lastSaveTime = DateAndTime.now();
 		onEntityChangesSaved(modified, deleted, created);
 
 		if (callback != null) callback.run();
+	}
+
+	private void writeLog(Map<String, Map<String, String>> modifiedPropertiesByEntityIds, Collection<String> deleted,
+			String transactionText) {
+		File file = getLogFile();
+		if (file == null) return;
+		JsonObject json = new JsonObject();
+		json.put("time", DateAndTime.now().toString());
+		json.put("txMessage", transactionText);
+		json.put("deleted", deleted);
+		json.put("modified", modifiedPropertiesByEntityIds);
+		json.write(file, true);
 	}
 
 	@Override
@@ -189,6 +207,13 @@ public abstract class AJsonFilesEntitiesBackend extends ACachingEntitiesBackend 
 
 	private File getFile(AEntity entity) {
 		return storage.getFile(entity.getClass().getSimpleName() + "/" + entity.getId() + ".json");
+	}
+
+	private File getLogFile() {
+		if (logStorage == null) return null;
+		long ct = System.currentTimeMillis();
+		DateAndTime dateAndTime = new DateAndTime(ct);
+		return logStorage.getFile(dateAndTime.formatLog() + "_" + ct + ".json");
 	}
 
 	@Override

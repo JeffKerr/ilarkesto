@@ -1,14 +1,14 @@
 /*
  * Copyright 2011 Witoslaw Koczewsi <wi@koczewski.de>, Artjom Kochtchi
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
  * General Public License as published by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
@@ -92,11 +92,15 @@ public class Eml {
 		// Session session = createSmtpSession("smtp.gmail.com", 587, true,
 		// LoginPanel.showDialog(null, "GMail SMTP", new File("runtimedata/gmail-smtp.properties")));
 
-		String html = "<h1>Überschrift</h1><p>paragraph <strong>strong</strong></p>";
+		String inlineImgName = "polizei-nds.jpg";
+		String html = "<h1>Überschrift</h1><img src=\"cid:" + inlineImgName
+				+ "\"><p>paragraph <strong>strong</strong></p>";
 		String subject = "test html " + DateAndTime.now();
 		String from = "wi@koczewski.de";
-		String to = "wi@koczewski.de, witoslaw.koczewski@gmail.com";
-		Attachment[] attachments = createAttachments(new File("/home/witek/inbox/Fehler.png"));
+		String to = "wi@koczewski.de";
+		Attachment[] attachments = new Attachment[] {
+				Eml.createInlineAttachment(new File("/home/witek/inbox/" + inlineImgName)),
+				Eml.createAttachments(new File("/home/witek/inbox/Auftrag_Anschluss.pdf"))[0] };
 		MimeMessage message = createMessage(session, subject, html, null, from, to, attachments);
 		sendSmtpMessage(session, message);
 
@@ -118,7 +122,7 @@ public class Eml {
 		// folder.open(Folder.READ_ONLY);
 		// LOG.debug("folder:", folder.getName());
 		// for (Message message : folder.getMessages()) {
-		// LOG.debug("  message:", getSubject(message), "->", getContentAsText(message));
+		// LOG.debug(" message:", getSubject(message), "->", getContentAsText(message));
 		// }
 		// } finally {
 		// closeStore(store);
@@ -566,6 +570,16 @@ public class Eml {
 
 		if (text == null) text = Html.convertHtmlToText(html);
 
+		List<Attachment> usualAttachments = new ArrayList<Eml.Attachment>();
+		List<Attachment> inlineAttachments = new ArrayList<Eml.Attachment>();
+		for (Attachment attachment : attachments) {
+			if (attachment.isInline()) {
+				inlineAttachments.add(attachment);
+			} else {
+				usualAttachments.add(attachment);
+			}
+		}
+
 		MimeMessage msg = createEmptyMimeMessage(session);
 		try {
 			msg.setSubject(subject, charset);
@@ -585,25 +599,31 @@ public class Eml {
 				return msg;
 			}
 
-			MimeMultipart multipartMixed = new MimeMultipart("mixed");
+			MimeMultipart partMixed = new MimeMultipart("mixed");
 
 			if (Str.isBlank(html)) {
 				// no html
-				MimeBodyPart textBodyPart = new MimeBodyPart();
-				textBodyPart.setText(text, charset);
-				multipartMixed.addBodyPart(textBodyPart);
+				MimeBodyPart partText = new MimeBodyPart();
+				partText.setText(text, charset);
+				partMixed.addBodyPart(partText);
 			} else {
 				// html
-				MimeBodyPart wrapAlternative = new MimeBodyPart();
-				wrapAlternative.setContent(createMultipartAlternative(text, html));
-				multipartMixed.addBodyPart(wrapAlternative);
+				MimeBodyPart partAlternative = new MimeBodyPart();
+				partAlternative.setContent(createMultipartAlternative(text, html));
+				if (inlineAttachments.isEmpty()) {
+					partMixed.addBodyPart(partAlternative);
+				} else {
+					MimeBodyPart partRelated = new MimeBodyPart();
+					partRelated.setContent(createMultipartRelated(partAlternative, inlineAttachments));
+					partMixed.addBodyPart(partRelated);
+				}
 			}
 
-			for (Attachment attachment : attachments) {
-				appendAttachment(multipartMixed, attachment);
+			for (Attachment attachment : usualAttachments) {
+				appendAttachment(partMixed, attachment);
 			}
 
-			msg.setContent(multipartMixed);
+			msg.setContent(partMixed);
 			return msg;
 
 		} catch (MessagingException ex) {
@@ -624,10 +644,23 @@ public class Eml {
 		return multipartAlternative;
 	}
 
+	private static MimeMultipart createMultipartRelated(MimeBodyPart part1, Collection<Attachment> attachments)
+			throws MessagingException {
+		MimeMultipart multipartRelated = new MimeMultipart("related");
+		multipartRelated.addBodyPart(part1);
+		for (Attachment attachment : attachments) {
+			appendAttachment(multipartRelated, attachment);
+		}
+		return multipartRelated;
+	}
+
 	private static void appendAttachment(Multipart multipart, Attachment attachment) throws MessagingException {
 		BodyPart fileBodyPart = new MimeBodyPart();
 		fileBodyPart.setDataHandler(new DataHandler(attachment.getDataSource()));
 		fileBodyPart.setFileName(attachment.getFileName());
+		fileBodyPart.setDisposition(attachment.getDisposition());
+		fileBodyPart.setHeader("Content-ID", "<" + attachment.getId() + ">");
+		fileBodyPart.setHeader("X-Attachment-Id", attachment.getId());
 		multipart.addBodyPart(fileBodyPart);
 	}
 
@@ -953,6 +986,10 @@ public class Eml {
 		return attachments;
 	}
 
+	public static Attachment createInlineAttachment(File file) {
+		return new Attachment(file).setDisposition("inline");
+	}
+
 	public static void setCharset(String charset) {
 		Eml.charset = charset;
 		Sys.setProperty("mail.mime.charset", charset);
@@ -961,6 +998,8 @@ public class Eml {
 	public static class Attachment {
 
 		private String fileName;
+		private String id = UUID.randomUUID().toString();
+		private String disposition = "attachment";
 		private DataSource dataSource;
 
 		public Attachment(String fileName, DataSource dataSource) {
@@ -968,8 +1007,13 @@ public class Eml {
 			this.dataSource = dataSource;
 		}
 
+		public boolean isInline() {
+			return "inline".equals(disposition);
+		}
+
 		public Attachment(File file) {
 			this(file.getName(), new FileDataSource(file));
+			setId(file.getName());
 		}
 
 		public String getFileName() {
@@ -978,6 +1022,24 @@ public class Eml {
 
 		public DataSource getDataSource() {
 			return dataSource;
+		}
+
+		public Attachment setId(String id) {
+			this.id = id;
+			return this;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getDisposition() {
+			return disposition;
+		}
+
+		public Attachment setDisposition(String disposition) {
+			this.disposition = disposition;
+			return this;
 		}
 	}
 

@@ -2,6 +2,9 @@ package ilarkesto.gwt.client.desktop.fields;
 
 import ilarkesto.gwt.client.desktop.Widgets;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.IFrameElement;
@@ -98,7 +101,8 @@ public abstract class AEditableRichTextField extends AEditableField {
 			textArea.setTitle(getEditVetoMessage());
 		}
 
-		toolbar = new RichTextToolbar(textArea);
+		toolbar = new RichTextToolbar(textArea, isToolbarHtmlExtrasEnabled(), getToolbarInlineImageUrlPrefix(),
+				getToolbarInlineImages());
 
 		VerticalPanel vp = new VerticalPanel();
 		textArea.setWidth("100%");
@@ -107,6 +111,10 @@ public abstract class AEditableRichTextField extends AEditableField {
 		vp.add(textArea);
 
 		return vp;
+	}
+
+	public String getToolbarInlineImageUrlPrefix() {
+		return "";
 	}
 
 	private int getTextBoxWidth() {
@@ -132,6 +140,14 @@ public abstract class AEditableRichTextField extends AEditableField {
 
 	public String getAlternateValueIfValueIsNull() {
 		return null;
+	}
+
+	public boolean isToolbarHtmlExtrasEnabled() {
+		return false;
+	}
+
+	public List<String> getToolbarInlineImages() {
+		return Collections.emptyList();
 	}
 
 	private class EnterKeyUpHandler implements KeyUpHandler {

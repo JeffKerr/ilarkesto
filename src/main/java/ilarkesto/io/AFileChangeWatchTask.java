@@ -28,34 +28,54 @@ public abstract class AFileChangeWatchTask extends ALoopTask {
 	private WatchService watcher;
 	private long sleepUntilChangeNotivication = 1000;
 
+	boolean first = true;
+
 	protected abstract void onChange();
 
 	public AFileChangeWatchTask(File root) {
 		this.root = root;
 	}
 
+	public boolean isOffline() {
+		return watcher == null;
+	}
+
 	protected void onFirstChange() {
 		onChange();
 	}
 
-	@Override
-	protected void beforeLoop() throws InterruptedException {
+	private void connect() {
+
 		try {
 			watcher = FileSystems.getDefault().newWatchService();
 			NIO.registerDirectoryTreeForAllChanges(watcher, root);
 		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+			watcher = null;
+			log.info("Offline:", root);
+			return;
 		}
 
 		log.info("Watching", root.getAbsolutePath());
 
-		onFirstChange();
+		if (first) {
+			onFirstChange();
+			first = false;
+		} else {
+			onChange();
+		}
 	}
 
 	@Override
 	protected void iteration() throws InterruptedException {
+		if (isOffline()) connect();
+		if (isOffline()) {
+			sleep(3000);
+			return;
+		}
+
 		WatchKey key = watcher.take();
 		reset(key);
+		if (isOffline()) return;
 
 		log.info("CHANGE");
 
@@ -73,12 +93,20 @@ public abstract class AFileChangeWatchTask extends ALoopTask {
 	}
 
 	private void reset(WatchKey key) {
+		if (isOffline()) return;
+
 		key.pollEvents();
-		if (!key.reset()) log.warn("key.reset() returned false for watcher on", root.getAbsolutePath());
+		if (!key.reset()) {
+			log.info("Offline:", root);
+			watcher = null;
+			return;
+		}
 		try {
 			NIO.registerDirectoryTreeForAllChanges(watcher, root);
 		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+			log.info("Offline:", root);
+			watcher = null;
+			return;
 		}
 	}
 

@@ -34,6 +34,8 @@ public abstract class ATable extends APdfElement {
 
 	public abstract ATable createCellBorders(Color color, float width);
 
+	public abstract boolean isEmpty();
+
 	public ATable(APdfElement parent, FontStyle fontStyle) {
 		super(parent);
 		Args.assertNotNull(fontStyle, "fontStyle");

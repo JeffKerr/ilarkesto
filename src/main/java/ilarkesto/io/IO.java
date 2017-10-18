@@ -404,8 +404,8 @@ public abstract class IO {
 		if (!from.exists())
 			throw new RuntimeException("Moving file " + from + " to " + to + " failed. Source file does not exist.");
 		if (!to.isDirectory() && to.exists()) {
-			if (!overwrite && !to.getName().equals(MAC_SYS_FILENAME))
-				throw new RuntimeException("Moving file " + from + " to " + to + " failed. File already exists.");
+			if (!overwrite && !to.getName().equals(MAC_SYS_FILENAME)) throw new RuntimeException("Moving file " + from
+					+ " to " + to + " failed. Destination file already exists and is no directory.");
 		}
 		createDirectory(to.getParentFile());
 		if (from.renameTo(to)) return;
@@ -1720,6 +1720,18 @@ public abstract class IO {
 			file.delete();
 		}
 		return true;
+	}
+
+	public static void touchAndDeleteInDir(File dir) {
+		File file = new File(dir.getPath() + "/touch-and-delete_" + System.currentTimeMillis() + ".txt");
+		FileOutputStream out;
+		try {
+			out = new FileOutputStream(file, true);
+			out.close();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+		IO.delete(file);
 	}
 
 }

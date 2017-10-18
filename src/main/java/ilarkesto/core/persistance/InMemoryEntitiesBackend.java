@@ -21,7 +21,7 @@ public final class InMemoryEntitiesBackend extends ACachingEntitiesBackend {
 
 	@Override
 	protected void onUpdate(Collection<AEntity> entities, Collection<String> entityIds,
-			Map<String, Map<String, String>> modifiedPropertiesByEntityId, Runnable callback) {
+			Map<String, Map<String, String>> modifiedPropertiesByEntityId, Runnable callback, String transactionText) {
 		if (callback != null) callback.run();
 	}
 

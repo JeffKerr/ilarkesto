@@ -97,7 +97,7 @@ public class FileEntityStore implements EntityStore {
 
 	@Override
 	public void update(Collection<AEntity> modified, Collection<String> deletedIds,
-			Map<String, Map<String, String>> modifiedPropertiesByEntityId, Runnable callback) {
+			Map<String, Map<String, String>> modifiedPropertiesByEntityId, Runnable callback, String transactionText) {
 		if (locked) throw new RuntimeException("Can not persist entity changes. EntityStore already locked.");
 
 		if (!versionSaved) saveVersion();

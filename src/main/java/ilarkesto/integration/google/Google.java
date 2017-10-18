@@ -15,6 +15,7 @@
 package ilarkesto.integration.google;
 
 import ilarkesto.base.Proc;
+import ilarkesto.base.Reflect;
 import ilarkesto.base.Str;
 import ilarkesto.core.auth.LoginData;
 import ilarkesto.core.auth.LoginDataProvider;
@@ -29,6 +30,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
@@ -350,6 +352,10 @@ public class Google {
 			contact.removeExtension(item);
 			contact.removeRepeatingExtension(item);
 		}
+	}
+
+	public static Map<String, Object> getAllProperties(ContactEntry contact) {
+		return Reflect.readAllGetters(contact, true);
 	}
 
 	public static void setField(ContactEntry contact, String name, String value) {
@@ -830,6 +836,7 @@ public class Google {
 	public static ContactsService createContactsService(LoginDataProvider login, String clientApplicationId) {
 		LoginData loginData = login.getLoginData();
 		ContactsService contactsService = new ContactsService(clientApplicationId);
+		contactsService.getRequestFactory().setHeader("User-Agent", "Ilarkesto");
 		try {
 			contactsService.setHeader("GData-Version", "3.0");
 			contactsService.setUserCredentials(loginData.getLogin(), loginData.getPassword());

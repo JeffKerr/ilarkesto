@@ -1,20 +1,22 @@
 /*
  * Copyright 2011 Witoslaw Koczewsi <wi@koczewski.de>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
  * General Public License as published by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program. If not,
  * see <http://www.gnu.org/licenses/>.
  */
 package ilarkesto.gwt.client.desktop.fields;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Element;
@@ -24,6 +26,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -66,46 +69,47 @@ public class RichTextToolbar extends Composite {
 
 	// HTML Related (styles made by SPAN and DIV)
 	private static final String HTML_STYLE_CLOSE_SPAN = "</span>";
-	private static final String HTML_STYLE_CLOSE_DIV = "</div>";
+	private static final String HTML_STYLE_CLOSE_DIV = "</div>\n";
 	private static final String HTML_STYLE_OPEN_BOLD = "<span style=\"font-weight: bold;\">";
 	private static final String HTML_STYLE_OPEN_ITALIC = "<span style=\"font-weight: italic;\">";
 	private static final String HTML_STYLE_OPEN_UNDERLINE = "<span style=\"font-weight: underline;\">";
 	private static final String HTML_STYLE_OPEN_LINETHROUGH = "<span style=\"font-weight: line-through;\">";
-	private static final String HTML_STYLE_OPEN_ALIGNLEFT = "<div style=\"text-align: left;\">";
-	private static final String HTML_STYLE_OPEN_ALIGNCENTER = "<div style=\"text-align: center;\">";
-	private static final String HTML_STYLE_OPEN_ALIGNRIGHT = "<div style=\"text-align: right;\">";
-	private static final String HTML_STYLE_OPEN_INDENTRIGHT = "<div style=\"margin-left: 40px;\">";
+	private static final String HTML_STYLE_OPEN_ALIGNLEFT = "\n<div style=\"text-align: left;\">";
+	private static final String HTML_STYLE_OPEN_ALIGNCENTER = "\n<div style=\"text-align: center;\">";
+	private static final String HTML_STYLE_OPEN_ALIGNRIGHT = "\n<div style=\"text-align: right;\">";
+	private static final String HTML_STYLE_OPEN_INDENTRIGHT = "\n<div style=\"margin-left: 40px;\">";
 
 	// HTML Related (styles made by custom HTML-Tags)
 	private static final String HTML_STYLE_OPEN_SUBSCRIPT = "<sub>";
 	private static final String HTML_STYLE_CLOSE_SUBSCRIPT = "</sub>";
 	private static final String HTML_STYLE_OPEN_SUPERSCRIPT = "<sup>";
 	private static final String HTML_STYLE_CLOSE_SUPERSCRIPT = "</sup>";
-	private static final String HTML_STYLE_OPEN_ORDERLIST = "<ol><li>";
-	private static final String HTML_STYLE_CLOSE_ORDERLIST = "</ol></li>";
-	private static final String HTML_STYLE_OPEN_UNORDERLIST = "<ul><li>";
-	private static final String HTML_STYLE_CLOSE_UNORDERLIST = "</ul></li>";
+	private static final String HTML_STYLE_OPEN_ORDERLIST = "\n<ol>\n  <li>";
+	private static final String HTML_STYLE_CLOSE_ORDERLIST = "</li></ol>\n";
+	private static final String HTML_STYLE_OPEN_UNORDERLIST = "\n<ul><li>";
+	private static final String HTML_STYLE_CLOSE_UNORDERLIST = "</li></ul>\n";
 
 	// HTML Related (styles without closing Tag)
-	private static final String HTML_STYLE_HLINE = "<hr style=\"width: 100%; height: 2px;\">";
+	private static final String HTML_STYLE_HLINE = "\n<hr>\n";
 
 	// GUI Related stuff
-	private static final String GUI_DIALOG_INSERTURL = "Enter a link URL:";
-	private static final String GUI_DIALOG_IMAGEURL = "Enter an image URL:";
+	private static final String GUI_DIALOG_INSERTURL = "Bitte ULR eingeben:";
+	private static final String GUI_DIALOG_IMAGEURL = "Bitte Bild-URL eingeben:";
 
 	private static final String GUI_LISTNAME_COLORS = "Farbe";
+	private static final String GUI_LISTNAME_INLINEIMAGES = "Bilder";
 	private static final String GUI_LISTNAME_FONTS = "Schrift";
 
 	private static final String GUI_HOVERTEXT_SWITCHVIEW = "Switch View HTML/Source";
-	private static final String GUI_HOVERTEXT_REMOVEFORMAT = "Remove Formatting";
+	private static final String GUI_HOVERTEXT_REMOVEFORMAT = "Formatierung entfernen";
 	private static final String GUI_HOVERTEXT_IMAGE = "Insert Image";
 	private static final String GUI_HOVERTEXT_HLINE = "Insert Horizontal Line";
 	private static final String GUI_HOVERTEXT_BREAKLINK = "Break Link";
-	private static final String GUI_HOVERTEXT_LINK = "Generate Link";
-	private static final String GUI_HOVERTEXT_IDENTLEFT = "Ident Left";
-	private static final String GUI_HOVERTEXT_IDENTRIGHT = "Ident Right";
-	private static final String GUI_HOVERTEXT_UNORDERLIST = "Unordered List";
-	private static final String GUI_HOVERTEXT_ORDERLIST = "Ordered List";
+	private static final String GUI_HOVERTEXT_LINK = "Link erstellen";
+	private static final String GUI_HOVERTEXT_IDENTLEFT = "Links einrücken";
+	private static final String GUI_HOVERTEXT_IDENTRIGHT = "Richts einrücken";
+	private static final String GUI_HOVERTEXT_UNORDERLIST = "Aufzählung";
+	private static final String GUI_HOVERTEXT_ORDERLIST = "Nummerierte Aufzählung";
 	private static final String GUI_HOVERTEXT_ALIGNRIGHT = "Align Right";
 	private static final String GUI_HOVERTEXT_ALIGNCENTER = "Align Center";
 	private static final String GUI_HOVERTEXT_ALIGNLEFT = "Align Left";
@@ -140,22 +144,32 @@ public class RichTextToolbar extends Composite {
 	// private PushButton alignleft;
 	// private PushButton alignmiddle;
 	// private PushButton alignright;
-	// private PushButton orderlist;
-	// private PushButton unorderlist;
-	// private PushButton indentleft;
-	// private PushButton indentright;
-	// private PushButton generatelink;
+	private PushButton orderlist;
+	private PushButton unorderlist;
+	private PushButton indentleft;
+	private PushButton indentright;
+	private PushButton generatelink;
 	// private PushButton breaklink;
 	// private PushButton insertline;
 	// private PushButton insertimage;
-	private PushButton removeformatting;
-	private ToggleButton texthtml;
+	// private PushButton removeformatting;
+	private ToggleButton toggleTextSource;
 
 	// private ListBox fontlist;
 	private ListBox colorlist;
 
-	/** Constructor of the Toolbar **/
-	public RichTextToolbar(RichTextArea richtext) {
+	private ListBox inlineimageslist;
+
+	private boolean extrasEnabled = false;
+	private String inlineImageUrlPrefix = "";
+	private List<String> inlineImages = Collections.emptyList();
+
+	public RichTextToolbar(RichTextArea richtext, boolean extrasEnabled, String inlineImageUrlPrefix,
+			List<String> inlineImages) {
+		this.extrasEnabled = extrasEnabled;
+		this.inlineImageUrlPrefix = inlineImageUrlPrefix;
+		this.inlineImages = inlineImages;
+
 		// Initialize the main-panel
 		outer = new VerticalPanel();
 
@@ -196,8 +210,8 @@ public class RichTextToolbar extends Composite {
 	}
 
 	public String getHtml() {
-		if (texthtml.isDown()) return styleText.getText();
-		return styleText.getHTML();
+		if (toggleTextSource.isDown()) return styleText.getText();
+		return beautifyHtml(styleText.getHTML());
 	}
 
 	/** Click Handler of the Toolbar **/
@@ -206,25 +220,25 @@ public class RichTextToolbar extends Composite {
 		@Override
 		public void onClick(ClickEvent event) {
 			if (event.getSource().equals(bold)) {
-				if (isHTMLMode()) {
+				if (isSourceMode()) {
 					changeHtmlStyle(HTML_STYLE_OPEN_BOLD, HTML_STYLE_CLOSE_SPAN);
 				} else {
 					styleTextFormatter.toggleBold();
 				}
 			} else if (event.getSource().equals(italic)) {
-				if (isHTMLMode()) {
+				if (isSourceMode()) {
 					changeHtmlStyle(HTML_STYLE_OPEN_ITALIC, HTML_STYLE_CLOSE_SPAN);
 				} else {
 					styleTextFormatter.toggleItalic();
 				}
 			} else if (event.getSource().equals(underline)) {
-				if (isHTMLMode()) {
+				if (isSourceMode()) {
 					changeHtmlStyle(HTML_STYLE_OPEN_UNDERLINE, HTML_STYLE_CLOSE_SPAN);
 				} else {
 					styleTextFormatter.toggleUnderline();
 				}
 			} else if (event.getSource().equals(stroke)) {
-				if (isHTMLMode()) {
+				if (isSourceMode()) {
 					changeHtmlStyle(HTML_STYLE_OPEN_LINETHROUGH, HTML_STYLE_CLOSE_SPAN);
 				} else {
 					styleTextFormatter.toggleStrikethrough();
@@ -259,39 +273,39 @@ public class RichTextToolbar extends Composite {
 				// } else {
 				// styleTextFormatter.setJustification(RichTextArea.Justification.RIGHT);
 				// }
-				// } else if (event.getSource().equals(orderlist)) {
-				// if (isHTMLMode()) {
-				// changeHtmlStyle(HTML_STYLE_OPEN_ORDERLIST, HTML_STYLE_CLOSE_ORDERLIST);
-				// } else {
-				// styleTextFormatter.insertOrderedList();
-				// }
-				// } else if (event.getSource().equals(unorderlist)) {
-				// if (isHTMLMode()) {
-				// changeHtmlStyle(HTML_STYLE_OPEN_UNORDERLIST, HTML_STYLE_CLOSE_UNORDERLIST);
-				// } else {
-				// styleTextFormatter.insertUnorderedList();
-				// }
-				// } else if (event.getSource().equals(indentright)) {
-				// if (isHTMLMode()) {
-				// changeHtmlStyle(HTML_STYLE_OPEN_INDENTRIGHT, HTML_STYLE_CLOSE_DIV);
-				// } else {
-				// styleTextFormatter.rightIndent();
-				// }
-				// } else if (event.getSource().equals(indentleft)) {
-				// if (isHTMLMode()) {
-				// // TODO nothing can be done here at the moment
-				// } else {
-				// styleTextFormatter.leftIndent();
-				// }
-				// } else if (event.getSource().equals(generatelink)) {
-				// String url = Window.prompt(GUI_DIALOG_INSERTURL, "http://");
-				// if (url != null) {
-				// if (isHTMLMode()) {
-				// changeHtmlStyle("<a href=\"" + url + "\">", "</a>");
-				// } else {
-				// styleTextFormatter.createLink(url);
-				// }
-				// }
+			} else if (event.getSource().equals(orderlist)) {
+				if (isSourceMode()) {
+					changeHtmlStyle(HTML_STYLE_OPEN_ORDERLIST, HTML_STYLE_CLOSE_ORDERLIST);
+				} else {
+					styleTextFormatter.insertOrderedList();
+				}
+			} else if (event.getSource().equals(unorderlist)) {
+				if (isSourceMode()) {
+					changeHtmlStyle(HTML_STYLE_OPEN_UNORDERLIST, HTML_STYLE_CLOSE_UNORDERLIST);
+				} else {
+					styleTextFormatter.insertUnorderedList();
+				}
+			} else if (event.getSource().equals(indentright)) {
+				if (isSourceMode()) {
+					changeHtmlStyle(HTML_STYLE_OPEN_INDENTRIGHT, HTML_STYLE_CLOSE_DIV);
+				} else {
+					styleTextFormatter.rightIndent();
+				}
+			} else if (event.getSource().equals(indentleft)) {
+				if (isSourceMode()) {
+					// TODO nothing can be done here at the moment
+				} else {
+					styleTextFormatter.leftIndent();
+				}
+			} else if (event.getSource().equals(generatelink)) {
+				String url = Window.prompt(GUI_DIALOG_INSERTURL, "http://");
+				if (url != null) {
+					if (isSourceMode()) {
+						changeHtmlStyle("<a href=\"" + url + "\">", "</a>");
+					} else {
+						styleTextFormatter.createLink(url);
+					}
+				}
 				// } else if (event.getSource().equals(breaklink)) {
 				// if (isHTMLMode()) {
 				// // TODO nothing can be done here at the moment
@@ -313,15 +327,18 @@ public class RichTextToolbar extends Composite {
 				// } else {
 				// styleTextFormatter.insertHorizontalRule();
 				// }
-			} else if (event.getSource().equals(removeformatting)) {
-				if (isHTMLMode()) {
-					// TODO nothing can be done here at the moment
-				} else {
-					styleTextFormatter.removeFormat();
-				}
-			} else if (event.getSource().equals(texthtml)) {
-				if (texthtml.isDown()) {
-					styleText.setText(styleText.getHTML());
+				// } else if (event.getSource().equals(removeformatting)) {
+				// if (isHTMLMode()) {
+				// // TODO nothing can be done here at the moment
+				// } else {
+				// styleTextFormatter.removeFormat();
+				// }
+			} else if (event.getSource().equals(toggleTextSource)) {
+				if (toggleTextSource.isDown()) {
+					String html = beautifyHtml(styleText.getHTML());
+					styleText.setText(html);
+					styleTextFormatter.selectAll();
+					styleTextFormatter.setFontName("monospace");
 				} else {
 					styleText.setHTML(styleText.getText());
 				}
@@ -347,12 +364,19 @@ public class RichTextToolbar extends Composite {
 			// }
 			// } else
 			if (event.getSource().equals(colorlist)) {
-				if (isHTMLMode()) {
-					changeHtmlStyle(
-						"<span style=\"color: " + colorlist.getValue(colorlist.getSelectedIndex()) + ";\">",
+				if (isSourceMode()) {
+					changeHtmlStyle("<span style=\"color: " + colorlist.getValue(colorlist.getSelectedIndex()) + ";\">",
 						HTML_STYLE_CLOSE_SPAN);
 				} else {
 					styleTextFormatter.setForeColor(colorlist.getValue(colorlist.getSelectedIndex()));
+				}
+			} else if (event.getSource().equals(inlineimageslist)) {
+				String name = inlineimageslist.getValue(inlineimageslist.getSelectedIndex());
+				String url = inlineImageUrlPrefix + name;
+				if (isSourceMode()) {
+					changeHtmlStyle("<img src=\"" + name + "\" alt=\"" + url + "\">", "");
+				} else {
+					styleTextFormatter.insertImage(url);
 				}
 			}
 		}
@@ -395,8 +419,8 @@ public class RichTextToolbar extends Composite {
 	}
 
 	/** Private method with a more understandable name to get if HTML mode is on or not **/
-	private Boolean isHTMLMode() {
-		return texthtml.isDown();
+	private boolean isSourceMode() {
+		return toggleTextSource.isDown();
 	}
 
 	/** Private method to set the toggle buttons and disable/enable buttons which do not work in html-mode **/
@@ -410,13 +434,19 @@ public class RichTextToolbar extends Composite {
 			stroke.setDown(styleTextFormatter.isStrikethrough());
 		}
 
-		boolean htmlMode = isHTMLMode();
-		bold.setEnabled(!htmlMode);
-		italic.setEnabled(!htmlMode);
-		underline.setEnabled(!htmlMode);
-		stroke.setEnabled(!htmlMode);
-		colorlist.setEnabled(!htmlMode);
-		removeformatting.setEnabled(!htmlMode);
+		boolean sourceMode = isSourceMode();
+		bold.setEnabled(!sourceMode);
+		italic.setEnabled(!sourceMode);
+		underline.setEnabled(!sourceMode);
+		stroke.setEnabled(!sourceMode);
+		colorlist.setEnabled(!sourceMode);
+		inlineimageslist.setEnabled(!sourceMode);
+		orderlist.setEnabled(!sourceMode);
+		unorderlist.setEnabled(!sourceMode);
+		indentleft.setEnabled(!sourceMode);
+		indentright.setEnabled(!sourceMode);
+		generatelink.setEnabled(!sourceMode);
+		// removeformatting.setEnabled(!htmlMode);
 	}
 
 	/** Initialize the options on the toolbar **/
@@ -426,7 +456,8 @@ public class RichTextToolbar extends Composite {
 		topPanel.add(italic = createToggleButton("italic", GUI_HOVERTEXT_ITALIC));
 		topPanel.add(underline = createToggleButton("underline", GUI_HOVERTEXT_UNDERLINE));
 		topPanel.add(stroke = createToggleButton("stroke", GUI_HOVERTEXT_STROKE));
-		topPanel.add(new HTML("&nbsp;"));
+		topPanel.add(colorlist = createColorList());
+
 		// topPanel.add(subscript = createToggleButton("subscript", GUI_HOVERTEXT_SUBSCRIPT));
 		// topPanel.add(superscript = createToggleButton("superscript", GUI_HOVERTEXT_SUPERSCRIPT));
 		// topPanel.add(new HTML("&nbsp;"));
@@ -436,18 +467,8 @@ public class RichTextToolbar extends Composite {
 		// GUI_HOVERTEXT_ALIGNCENTER));
 		// topPanel.add(alignright = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 480, 20, 20,
 		// GUI_HOVERTEXT_ALIGNRIGHT));
+
 		// topPanel.add(new HTML("&nbsp;"));
-		// topPanel.add(orderlist = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 80, 20, 20,
-		// GUI_HOVERTEXT_ORDERLIST));
-		// topPanel.add(unorderlist = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 20, 20, 20,
-		// GUI_HOVERTEXT_UNORDERLIST));
-		// topPanel.add(indentright = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 400, 20, 20,
-		// GUI_HOVERTEXT_IDENTRIGHT));
-		// topPanel.add(indentleft = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 540, 20, 20,
-		// GUI_HOVERTEXT_IDENTLEFT));
-		// topPanel.add(new HTML("&nbsp;"));
-		// topPanel.add(generatelink = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 500, 20, 20,
-		// GUI_HOVERTEXT_LINK));
 		// topPanel.add(breaklink = createPushButton(HTTP_STATIC_ICONS_GIF, 0, 640, 20, 20,
 		// GUI_HOVERTEXT_BREAKLINK));
 		// topPanel.add(new HTML("&nbsp;"));
@@ -460,12 +481,36 @@ public class RichTextToolbar extends Composite {
 		// Init the BOTTOM Panel
 		// topPanel.add(fontlist = createFontList());
 		// topPanel.add(new HTML("&nbsp;"));
-		topPanel.add(colorlist = createColorList());
+
+		inlineimageslist = createInlineimageList();
+		if (!inlineImages.isEmpty()) {
+			topPanel.add(new HTML("&nbsp;"));
+			topPanel.add(inlineimageslist);
+		}
+
+		generatelink = createPushButton("link", GUI_HOVERTEXT_LINK);
+		unorderlist = createPushButton("unorderlist", GUI_HOVERTEXT_UNORDERLIST);
+		orderlist = createPushButton("orderlist", GUI_HOVERTEXT_ORDERLIST);
+		indentright = createPushButton("indentRight", GUI_HOVERTEXT_IDENTRIGHT);
+		indentleft = createPushButton("indentLeft", GUI_HOVERTEXT_IDENTLEFT);
+		if (extrasEnabled) {
+			topPanel.add(new HTML("&nbsp;"));
+			topPanel.add(unorderlist);
+			topPanel.add(orderlist);
+			topPanel.add(indentright);
+			topPanel.add(indentleft);
+
+			topPanel.add(new HTML("&nbsp;"));
+			topPanel.add(generatelink);
+		}
+
+		// topPanel.add(new HTML("&nbsp;"));
+		// topPanel.add(removeformatting = createPushButton("remove", GUI_HOVERTEXT_REMOVEFORMAT));
+
 		topPanel.add(new HTML("&nbsp;"));
-		topPanel.add(removeformatting = createPushButton("remove", GUI_HOVERTEXT_REMOVEFORMAT));
-		topPanel.add(new HTML("&nbsp;"));
-		texthtml = createToggleButton("texthtml", GUI_HOVERTEXT_SWITCHVIEW);
-		topPanel.add(texthtml);
+		toggleTextSource = createToggleButton("texthtml", GUI_HOVERTEXT_SWITCHVIEW);
+
+		topPanel.add(toggleTextSource);
 	}
 
 	private static final int ICON_SIZE = 16;
@@ -526,4 +571,27 @@ public class RichTextToolbar extends Composite {
 		return mylistBox;
 	}
 
+	private ListBox createInlineimageList() {
+		ListBox mylistBox = new ListBox();
+		mylistBox.addChangeHandler(evHandler);
+		mylistBox.setVisibleItemCount(1);
+
+		mylistBox.addItem(GUI_LISTNAME_INLINEIMAGES);
+		for (String image : inlineImages) {
+			mylistBox.addItem(image);
+		}
+
+		return mylistBox;
+	}
+
+	private static String beautifyHtml(String html) {
+		html = html.replace("><div>", ">\n<div>");
+		html = html.replace("><br>", ">\n<br>");
+		html = html.replace("<br><", "<br>\n<");
+		html = html.replace("><ul>", ">\n<ul>");
+		html = html.replace("><ol>", ">\n<ol>");
+		html = html.replace("><li>", ">\n  <li>");
+		html = html.replace("><img ", ">\n  <img ");
+		return html;
+	}
 }

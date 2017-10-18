@@ -27,7 +27,7 @@ public class WorkActivity {
 	private Time start;
 	private Time end;
 	private String hiszillaId;
-	private String achievoId;
+	private String achievoPhaseId;
 	private String achievoPackageId;
 	private String achievoProjectId;
 	private String text;
@@ -50,7 +50,7 @@ public class WorkActivity {
 
 		if (parser.getNext(1).startsWith("%")) {
 			hiszillaId = lastActivity.getHiszillaId();
-			achievoId = lastActivity.getAchievoId();
+			achievoPhaseId = lastActivity.getAchievoPhaseId();
 			text = lastActivity.getText();
 			return;
 		}
@@ -60,7 +60,7 @@ public class WorkActivity {
 		}
 
 		if (parser.getNext(1).startsWith("$")) {
-			achievoId = parser.getUntilAndGotoAfter(" ").substring(1);
+			achievoPhaseId = parser.getUntilAndGotoAfter(" ").substring(1);
 		}
 
 		text = parser.getRemaining();
@@ -83,12 +83,12 @@ public class WorkActivity {
 		return hiszillaId;
 	}
 
-	public String getAchievoId() {
-		return achievoId;
+	public String getAchievoPhaseId() {
+		return achievoPhaseId;
 	}
 
-	public void setAchievoId(String achievoId) {
-		this.achievoId = achievoId;
+	public void setAchievoPhaseId(String achievoId) {
+		this.achievoPhaseId = achievoId;
 	}
 
 	public String getAchievoPackageId() {
@@ -117,13 +117,13 @@ public class WorkActivity {
 
 	@Override
 	public String toString() {
-		return start + " - " + end + " | " + hiszillaId + " | " + achievoId + " | " + text;
+		return start + " - " + end + " | " + hiszillaId + " | " + achievoPhaseId + " | " + text;
 	}
 
 	public void appendTo(CsvWriter csv) {
 		csv.writeField(achievoProjectId); // projectId
 		csv.writeField(achievoPackageId); // package
-		csv.writeField(achievoId); // phaseId
+		csv.writeField(achievoPhaseId); // phaseId
 		Date date = dayAtWork.getDate();
 
 		// csv.writeField(date.getMonth() + "/" + date.getDay() + "/" + date.getYear()); // activitydate

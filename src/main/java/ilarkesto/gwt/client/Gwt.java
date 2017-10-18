@@ -637,4 +637,12 @@ public class Gwt {
 		return image;
 	}
 
+	public static boolean isServer() {
+		return !isClient();
+	}
+
+	public static boolean isClient() {
+		return com.google.gwt.core.shared.GWT.isClient();
+	}
+
 }
